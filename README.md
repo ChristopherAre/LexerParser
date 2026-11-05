@@ -1,10 +1,10 @@
-# 🚀 Compilador LexerParser
+# Compilador LexerParser
 
 Repositorio correspondiente al desarrollo de las fases de un compilador (Análisis Léxico, Sintáctico y Semántico), diseñado bajo los requerimientos de la plantilla institucional con soporte de nomenclatura bilingüe y reporte formal de la Tabla de Símbolos.
 
 ---
 
-## 📂 Estructura del Proyecto
+##  Estructura del Proyecto
 
 ```text
 LexerParser/
