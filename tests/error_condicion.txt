@@ -1,0 +1,4 @@
+entero x = 5;
+mientras (x + 1) {
+    x = x - 1;
+}

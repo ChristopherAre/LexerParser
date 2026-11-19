@@ -1,96 +1,95 @@
+# main.py
+# Une las 5 fases del compilador:
+#   Fase 1 Lexer -> Fase 2 Parser (AST) -> Fase 3 Semántica -> Fase 4 TAC -> Fase 5 VM
+#
+# Uso:
+#   py main.py tests/valido.txt
+#   py main.py tests/valido.txt --solo-lexer       (se detiene tras la Fase 1)
+#   py main.py tests/valido.txt --solo-parser      (tras la Fase 2)
+#   py main.py tests/valido.txt --solo-semantica   (tras la Fase 3)
+#   py main.py tests/valido.txt --solo-tac         (tras la Fase 4)
+#   py main.py tests/ciclo_infinito.txt --limite-pasos 50
+
 import sys
 import os
 
-# Asegurar que el directorio actual esté en el path para importar módulos locales
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-# Intentar importar el Lexer y el Parser desde sus respectivas carpetas/módulos
-try:
-    from lexer.lexer import Lexer
-except ImportError:
-    try:
-        from lexer import Lexer
-    except ImportError:
-        Lexer = None
-
-try:
-    from parser.parser import Parser
-except ImportError:
-    try:
-        from parser import Parser
-    except ImportError:
-        Parser = None
-
+from lexer.lexer import Lexer
+from parser.parser import Parser
 from semantic.analizador import AnalizadorSemantico
+from intermediate.tac import GeneradorTAC, imprimir_tac
+from vm.maquina_virtual import MaquinaVirtual
+
+
+def titulo(texto):
+    print("\n" + "=" * 54)
+    print(f"{texto:^54}")
+    print("=" * 54)
+
 
 def main():
-    # Validar que se haya pasado el archivo de prueba como argumento
-    if len(sys.argv) < 2:
-        print("Uso correcto: py main.py <ruta_archivo>")
-        print("Ejemplo: py main.py tests/valido.txt")
+    args = sys.argv[1:]
+    if not args:
+        print("Uso: py main.py <archivo> [--solo-lexer | --solo-parser | "
+              "--solo-semantica | --solo-tac] [--limite-pasos N]")
         return
 
-    archivo_path = sys.argv[1]
-    print(f"\n--- Analizando archivo: {archivo_path} ---")
+    archivo = args[0]
+    limite = 10000
+    if '--limite-pasos' in args:
+        limite = int(args[args.index('--limite-pasos') + 1])
 
-    if not os.path.exists(archivo_path):
-        print(f"\n[ERROR]: El archivo '{archivo_path}' no existe o la ruta es incorrecta.")
+    if not os.path.exists(archivo):
+        print(f"[ERROR]: El archivo '{archivo}' no existe.")
         return
+    with open(archivo, 'r', encoding='utf-8') as f:
+        codigo = f.read()
 
-    # Leer el contenido del archivo de código fuente
-    try:
-        with open(archivo_path, 'r', encoding='utf-8') as f:
-            codigo = f.read()
-    except Exception as e:
-        print(f"\n[ERROR]: No se pudo leer el archivo. Detalle: {e}")
-        return
+    print(f"\n--- Analizando archivo: {archivo} ---")
 
     try:
-        # 1. Fase de Análisis Léxico y Sintáctico (Generación del AST)
-        if Parser is not None and Lexer is not None:
-            # Inicializar el Lexer pasando el código fuente directamente
-            lexer_instancia = Lexer(codigo)
-            parser_instancia = Parser(lexer_instancia)
-            
-            # Intentar diferentes nombres de métodos comunes para iniciar el parsing
-            if hasattr(parser_instancia, 'parse'):
-                # Algunos parsers toman el código en .parse(), otros usan el lexer interno
-                try:
-                    ast = parser_instancia.parse(codigo)
-                except TypeError:
-                    ast = parser_instancia.parse()
-            elif hasattr(parser_instancia, 'compilar'):
-                ast = parser_instancia.compilar(codigo)
-            else:
-                ast = parser_instancia()
-        else:
-            raise ImportError("No se pudo importar la clase Parser o Lexer. Verifica las rutas de tus carpetas.")
+        # FASE 1: Lexer
+        if '--solo-lexer' in args:
+            titulo("FASE 1: TOKENS")
+            for tok in Lexer(codigo).tokenizar():
+                print(f"  Línea {tok.linea:<3} {tok.type:<10} {tok.value!r}")
+            return
 
-        print("\n[ÉXITO] ¡Análisis sintáctico exitoso!")
-        print(f"--- AST Generado ---\n{ast}\n")
+        # FASE 2: Parser y AST
+        ast = Parser(Lexer(codigo)).parse()
+        print("\n[ÉXITO] Fase 2: análisis sintáctico correcto")
+        print(f"AST: {ast}")
+        if '--solo-parser' in args:
+            return
 
-        # 2. Fase de Análisis Semántico
+        # FASE 3: Semántica
         analizador = AnalizadorSemantico()
         analizador.visitar(ast)
-
-        print("[ÉXITO] ¡Análisis semántico exitoso!")
-
-        # 3. Reporte Formal de la Tabla de Símbolos (Requerido por la cátedra)
-        print("\n" + "="*45)
-        print(f"{'TABLA DE SÍMBOLOS':^45}")
-        print("="*45)
+        print("\n[ÉXITO] Fase 3: análisis semántico correcto")
+        titulo("TABLA DE SÍMBOLOS")
         print(f"{'Variable':<20} | {'Tipo':<20}")
-        print("-" * 45)
-        
-        if hasattr(analizador, 'tabla_simbolos') and analizador.tabla_simbolos:
-            for nombre, tipo in analizador.tabla_simbolos.items():
-                print(f"{nombre:<20} | {tipo:<20}")
-        else:
-            print(f"{'No se registraron variables':<45}")
-        print("="*45 + "\n")
+        print("-" * 54)
+        for nombre, tipo in analizador.tabla_simbolos.items():
+            print(f"{nombre:<20} | {tipo:<20}")
+        if '--solo-semantica' in args:
+            return
+
+        # FASE 4: Código intermedio
+        tac = GeneradorTAC().generar(ast)
+        titulo("FASE 4: CÓDIGO INTERMEDIO (TAC)")
+        imprimir_tac(tac)
+        if '--solo-tac' in args:
+            return
+
+        # FASE 5: Máquina virtual
+        titulo("FASE 5: SALIDA DE LA MÁQUINA VIRTUAL")
+        MaquinaVirtual(tac).ejecutar(max_pasos=limite)
+        print("\n[ÉXITO] Programa ejecutado correctamente")
 
     except Exception as e:
         print(f"\n[ERROR]: {e}\n")
+
 
 if __name__ == '__main__':
     main()

@@ -1,4 +1,15 @@
-a = 5;
-if (a < 10) {
-    a = a + 1;
+// Extensión: decimal, cadena, booleano, sino si, y/o/no, comentarios
+decimal precio = 3.14;
+cadena saludo = "hola";
+booleano activo = verdadero;
+entero a = 5;
+
+/* comentario
+   de bloque */
+si (a < 1 + 2) {
+    imprimir("chico");
+} sino si (a >= 5 y no falso) {
+    imprimir(saludo);
+} sino {
+    imprimir(-a);
 }

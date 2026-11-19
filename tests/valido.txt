@@ -1,13 +1,15 @@
-x = 10;
-y = 20;
-suma = x + y * 2;
+entero x = 10;
+entero b = 20;
+entero suma = x + b * 2;
+entero z;
 
-if (suma == 50) {
+si (suma == 50) {
     z = 1;
-} else {
+} sino {
     z = 0;
 }
 
-while (x > 0) {
+mientras (x > 0) {
     x = x - 1;
 }
+imprimir(suma);
