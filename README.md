@@ -2,7 +2,7 @@
 
 **Curso:** Compiladores — Universidad San Pablo de Guatemala
 **Catedrático:** Ing. Carlos Isaac Arenas Guzmán
-**Estudiante:** [NOMBRE COMPLETO] — Carné No. [CARNÉ]
+**Estudiante:** Christopher Emmanuel Arellano Santizo — Carné No. 2400201
 
 Compilador para un lenguaje en español, construido por entregas. El programa fuente pasa por **cinco fases** hasta ejecutarse en una máquina virtual:
 
