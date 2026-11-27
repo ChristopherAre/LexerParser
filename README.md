@@ -1,3 +1,4 @@
+Video Explicación: https://drive.google.com/file/d/1WrCT73vWlC1ujYk-lgRADTPqLugiiswq/view?usp=sharing
 # LexerParser — Compilador completo en Python
 
 **Curso:** Compiladores — Universidad San Pablo de Guatemala
